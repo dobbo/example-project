@@ -9,8 +9,16 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
+<!--
+ ! THIS MODULE IS NOT USED AT ALL !!!
+-->
+
+
     <artifactId>project-lib</artifactId>
 
+    <!--
+     ! Repeating configuration!!! Not using inheritance!!
+    -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

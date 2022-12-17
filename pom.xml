@@ -33,29 +33,14 @@
     </modules>
 
     <properties>
-        <!-- Explicitly declaring the source encoding eliminates the following 
-            message: -->
-        <!-- [WARNING] Using platform encoding (UTF-8 actually) to copy filtered 
-            resources, i.e. build is platform dependent! -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- JBoss dependency versions -->
-        <version.wildfly.maven.plugin>3.0.0.Final</version.wildfly.maven.plugin>
-
-        <!-- Define the version of the JBoss BOMs we want to import to specify tested stacks. -->
-        <version.jboss.bom>26.1.0.Final</version.jboss.bom>
-
-        <!-- other plugin versions -->
-        <version.compiler.plugin>3.9.0</version.compiler.plugin>
-        <version.ear.plugin>3.2.0</version.ear.plugin>
-        <version.ejb.plugin>3.1.0</version.ejb.plugin>
-        <version.surefire.plugin>2.22.2</version.surefire.plugin>
-        <version.failsafe.plugin>2.22.2</version.failsafe.plugin>
-        <version.war.plugin>3.3.2</version.war.plugin>
-
-        <!-- maven-compiler-plugin -->
+        <maven.surefire.failsafe.version>3.0.0-M7</maven.surefire.failsafe.version>
         <maven.compiler.release>11</maven.compiler.release>
     </properties>
+
+    <!--
+     ! This usually should be done in your repository manager!!!
+    -->
 
     <!-- the JBoss community and Red Hat GA Maven repositories -->
     <repositories>
@@ -94,22 +79,24 @@
             <!-- Define the version of the EJB jar so that we don't need
                 to repeat ourselves in every module -->
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>org.example</groupId>
                 <artifactId>project-ejb</artifactId>
-                <version>${project.version}</version>
+                <version>1.0-SNAPSHOT</version>
                 <type>ejb</type>
             </dependency>
 
             <!-- Define the version of the WAR so that we don't need to repeat
                 ourselves in every module -->
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>org.example</groupId>
                 <artifactId>project-web</artifactId>
                 <version>${project.version}</version>
                 <type>war</type>
                 <scope>compile</scope>
             </dependency>
-            
+
+            <!-- Really on Jakarta EE 8 ???? -->
+
             <!-- JBoss distributes a complete set of Jakarta EE 8 APIs including
                 a Bill of Materials (BOM). A BOM specifies the versions of a "stack" (or 
                 a collection) of artifacts. We use this here so that we always get the correct 
@@ -118,37 +105,99 @@
             <dependency>
                 <groupId>org.wildfly.bom</groupId>
                 <artifactId>wildfly-jakartaee8-with-tools</artifactId>
-                <version>${version.jboss.bom}</version>
+                <version>26.1.0.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
-        <plugins>
-            <!--Configuration of the maven-compiler-plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.compiler.plugin}</version>
-                <configuration>
-                    <!-- put your configurations here -->
-                </configuration>
-            </plugin>
-            <!-- The WildFly plugin deploys your ear to a local JBoss AS container -->
-            <!-- Due to Maven's lack of intelligence with EARs we need 
-                 to configure the wildfly maven plugin to skip deployment for all modules.
-                 We then enable it specifically in the ear module. -->
-            <plugin>
-                <groupId>org.wildfly.plugins</groupId>
-                <artifactId>wildfly-maven-plugin</artifactId>
-                <version>${version.wildfly.maven.plugin}</version>
-                <inherited>true</inherited>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
+        <!--
+            Tell Maven that the resulting file should not have a file name containing the version
+            a non versioned name is required e.g. when building a deployable artifact using the ShrinkWrap API
+        -->
+        <finalName>${project.artifactId}</finalName>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.failsafe.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven.surefire.failsafe.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ear-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <configuration>
+                        <!-- Tell Maven we are using Jakarta EE -->
+                        <version>8</version>
+                        <!-- Use Jakarta EE ear libraries as needed. Jakarta EE ear libraries
+                            are in easy way to package any libraries needed in the ear, and automatically
+                            have any modules (EJB-JARs and WARs) use them -->
+                        <defaultLibBundleDir>lib</defaultLibBundleDir>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ejb-plugin</artifactId>
+                    <version>3.2.1</version>
+                    <configuration>
+                        <!-- Tell Maven EJB Plugin we are using EJB 3.2 -->
+                        <ejbVersion>3.2</ejbVersion>
+                    </configuration>
+                </plugin>
+                <!--
+                 ! https://maven.apache.org/plugins/maven-war-plugin/war-mojo.html#failOnMissingWebXml
+                 ! long time not needed anymore!!
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>3.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.10.1</version>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-Xlint:all</arg>
+                            <arg>-Xlint:-processing</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.wildfly.plugins</groupId>
+                    <artifactId>wildfly-maven-plugin</artifactId>
+                    <version>${version.wildfly.maven.plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <profiles>
@@ -165,6 +214,11 @@
                  This profile will start a new WildFly / JBoss EAP instance, and execute the test, shutting it down when done.
                  Run with: mvn clean verify -Parq-managed -->
             <id>arq-managed</id>
+            <!--
+             ! NEVER:
+             ! define supplemental deps via a profile. In particular test deps.
+             ! Just define them as test dependency.
+             -->
             <dependencies>
                 <dependency>
                     <groupId>org.wildfly.arquillian</groupId>
@@ -177,7 +231,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>${version.failsafe.plugin}</version>
                         <executions>
                             <execution>
                                 <goals>
@@ -202,6 +255,11 @@
             <!-- An optional Arquillian testing profile that executes tests in a remote WildFly / JBoss EAP instance.
                  Run with: mvn clean verify -Parq-remote -->
             <id>arq-remote</id>
+            <!--
+             ! NEVER:
+             ! define supplemental deps via a profile. In particular test deps.
+             ! Just define them as test dependency.
+             -->
             <dependencies>
                 <dependency>
                     <groupId>org.wildfly.arquillian</groupId>
@@ -214,7 +272,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>${version.failsafe.plugin}</version>
                         <executions>
                             <execution>
                                 <goals>
