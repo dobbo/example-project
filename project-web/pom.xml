@@ -28,6 +28,11 @@
     <name>project - web</name>
     <description>This is the web POM file</description>
 
+
+    <!--
+     ! Really reconsider all those dependencies!!! Are those all really needed here?
+     ! Start with empty dependencies and only add those you really use!
+    -->
     <dependencies>
 
         <!-- Import the CDI API, we use provided scope as the API is included in WildFly / JBoss EAP -->
@@ -118,21 +123,23 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <!-- Tell Maven that the resulting file should not have a file name containing the version - 
-			 a non versioned name is required e.g. when building a deployable artifact using the ShrinkWrap API -->
-		<finalName>${project.artifactId}</finalName>
-
-        <plugins>
-			<!--Build configuration for the WAR plugin: -->
-			<plugin>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>${version.war.plugin}</version>
-				<configuration>
-					<!-- Jakarta EE doesn't require web.xml, Maven needs to catch up! -->
-					<failOnMissingWebXml>false</failOnMissingWebXml>
-				</configuration>
-			</plugin>
-        </plugins>
-    </build>
+    <!--
+     ! The problem is simply you have not read the documentation.
+     ! The configuration for maven-war-plugin has been changed the default for
+     ! failOnMissingWebXml with 3.1.0 which has been released in 2017!
+     ! So this whole configuration is not needed at all!
+     ! https://maven.apache.org/plugins/maven-war-plugin/war-mojo.html#failOnMissingWebXml
+     -->
+<!--    <build>-->
+<!--        <plugins>-->
+<!--			&lt;!&ndash;Build configuration for the WAR plugin: &ndash;&gt;-->
+<!--			<plugin>-->
+<!--				<artifactId>maven-war-plugin</artifactId>-->
+<!--				<configuration>-->
+<!--					&lt;!&ndash; Jakarta EE doesn't require web.xml, Maven needs to catch up! &ndash;&gt;-->
+<!--					<failOnMissingWebXml>false</failOnMissingWebXml>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
 </project>
