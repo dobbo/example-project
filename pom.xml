@@ -27,6 +27,7 @@
     <description>Insert description for your project here.</description>
 
     <modules>
+        <module>project-lib</module>
         <module>project-ejb</module>
         <module>project-web</module>
         <module>project-ear</module>
